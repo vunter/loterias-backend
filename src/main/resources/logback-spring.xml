@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <springProperty scope="context" name="appName" source="spring.application.name" defaultValue="loterias-analyzer"/>
+
+    <springProperty scope="context" name="lokiUrl" source="observability.loki.url" defaultValue="http://localhost:3100"/>
+
+    <!-- Console appender -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Loki + Datadog appenders only in non-test profiles -->
+    <springProfile name="!test">
+        <!-- Loki appender -->
+        <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
+            <http>
+                <url>${lokiUrl}/loki/api/v1/push</url>
+            </http>
+            <format>
+                <label>
+                    <pattern>application=${appName},host=${HOSTNAME},level=%level</pattern>
+                </label>
+                <message>
+                    <pattern>{"timestamp":"%d{yyyy-MM-dd'T'HH:mm:ss.SSS'Z'}","level":"%level","logger":"%logger{36}","thread":"%thread","message":"%msg","exception":"%ex{full}"}</pattern>
+                </message>
+                <sortByTime>true</sortByTime>
+            </format>
+        </appender>
+
+        <!-- Async wrapper for Loki to avoid blocking -->
+        <appender name="ASYNC_LOKI" class="ch.qos.logback.classic.AsyncAppender">
+            <appender-ref ref="LOKI"/>
+            <queueSize>500</queueSize>
+            <discardingThreshold>0</discardingThreshold>
+        </appender>
+    </springProfile>
+
+    <!-- Datadog JSON file appender -->
+    <springProfile name="datadog">
+        <appender name="DATADOG_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>/var/log/loterias/application.json</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <fileNamePattern>/var/log/loterias/application.%d{yyyy-MM-dd}.json</fileNamePattern>
+                <maxHistory>7</maxHistory>
+            </rollingPolicy>
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <customFields>{"service":"${appName}","env":"${SPRING_PROFILES_ACTIVE:-dev}"}</customFields>
+                <includeMdc>true</includeMdc>
+            </encoder>
+        </appender>
+    </springProfile>
+
+    <!-- Test profile: console only -->
+    <springProfile name="test">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <!-- Dev profile (no datadog) -->
+    <springProfile name="!test &amp; !datadog">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_LOKI"/>
+        </root>
+    </springProfile>
+
+    <!-- Dev + Datadog or Prod + Datadog -->
+    <springProfile name="datadog">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_LOKI"/>
+            <appender-ref ref="DATADOG_FILE"/>
+        </root>
+    </springProfile>
+
+    <!-- Reduce noise from verbose loggers -->
+    <logger name="org.hibernate" level="WARN"/>
+    <logger name="org.springframework" level="INFO"/>
+    <logger name="io.netty" level="WARN"/>
+    <logger name="reactor" level="WARN"/>
+</configuration>
