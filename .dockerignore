@@ -1,0 +1,12 @@
+target/
+lib/
+*.log
+*.iml
+.idea/
+.git/
+.gitignore
+*.md
+!README.md
+docker-compose.yml
+ddagent-install.log
+src/main/resources/excels/
