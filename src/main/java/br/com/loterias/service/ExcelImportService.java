@@ -388,10 +388,10 @@ public class ExcelImportService {
                             log.info("[{}] ▶ Iniciando atualização...", tipo.getNome());
                             UpdateResult result = baixarEAtualizarCamposFaltantes(tipo);
                             resultados.put(tipo, result);
-                            log.info("[{}] ✓ Concluído: {} atualizados, {} novos em {}ms", 
+                            log.info("[{}] OK - Concluído: {} atualizados, {} novos em {}ms", 
                                     tipo.getNome(), result.atualizados(), result.novos(), result.tempoMs());
                         } catch (Exception e) {
-                            log.error("[{}] ✗ Erro: {}", tipo.getNome(), e.getMessage());
+                            log.error("[{}] ERRO - Erro: {}", tipo.getNome(), e.getMessage());
                             resultados.put(tipo, new UpdateResult(-1, 0, 0, 0));
                         }
                     }, executor))
@@ -449,17 +449,17 @@ public class ExcelImportService {
                     try {
                         log.info("[{}] ▶ Iniciando download...", tipo.getNome());
                         byte[] excelBytes = baixarExcel(tipo);
-                        log.info("[{}] ✓ Download concluído ({} KB)", tipo.getNome(), excelBytes.length / 1024);
+                        log.info("[{}] OK - Download concluído ({} KB)", tipo.getNome(), excelBytes.length / 1024);
                         
                         log.info("[{}] ▶ Iniciando importação...", tipo.getNome());
                         ImportResult result = importarDoExcelComBatchThreadSafe(tipo, new ByteArrayInputStream(excelBytes));
                         resultados.put(tipo, result);
                         
                         long tipoElapsed = System.currentTimeMillis() - tipoStart;
-                        log.info("[{}] ✓ CONCLUÍDO: {} importados, {} ignorados em {}s", 
+                        log.info("[{}] OK - CONCLUÍDO: {} importados, {} ignorados em {}s", 
                                 tipo.getNome(), result.importados(), result.ignorados(), tipoElapsed / 1000);
                     } catch (Exception e) {
-                        log.error("[{}] ✗ ERRO: {}", tipo.getNome(), e.getMessage());
+                        log.error("[{}] ERRO - ERRO: {}", tipo.getNome(), e.getMessage());
                         resultados.put(tipo, new ImportResult(-1, 0, 0));
                     }
                 }, executor))

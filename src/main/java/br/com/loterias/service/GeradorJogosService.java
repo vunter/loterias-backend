@@ -96,7 +96,7 @@ public class GeradorJogosService {
                 && req.quantidadeNumeros() <= tipo.getNumerosDezenas() / 3;
         
         if (debug && Boolean.TRUE.equals(req.evitarSequenciais()) && !podeEvitarSequenciais) {
-            etapas.add("⚠️ Evitar sequenciais ignorado: impossível com " + req.quantidadeNumeros() + " números de " + tipo.getNumerosDezenas());
+            etapas.add("[AVISO] Evitar sequenciais ignorado: impossível com " + req.quantidadeNumeros() + " números de " + tipo.getNumerosDezenas());
         }
 
         while (jogos.size() < quantidadeJogos && tentativas < MAX_TENTATIVAS) {

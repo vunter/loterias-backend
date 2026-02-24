@@ -27,12 +27,12 @@ public class OpenApiConfig {
                                 
                                 ## Funcionalidades
                                 
-                                - 📊 **Estatísticas**: Frequência, dezenas atrasadas, correlações
-                                - 🎲 **Gerador de Jogos**: Geração inteligente baseada em estatísticas
-                                - ✅ **Verificador**: Confira seus jogos contra resultados históricos
-                                - 🎰 **Simulador**: Simule apostas em todo o histórico
-                                - 📥 **Importação**: Baixe dados diretamente da Caixa
-                                - 📤 **Exportação**: Exporte dados em CSV
+                                - **Estatísticas**: Frequência, dezenas atrasadas, correlações
+                                - **Gerador de Jogos**: Geração inteligente baseada em estatísticas
+                                - **Verificador**: Confira seus jogos contra resultados históricos
+                                - **Simulador**: Simule apostas em todo o histórico
+                                - **Importação**: Baixe dados diretamente da Caixa
+                                - **Exportação**: Exporte dados em CSV
                                 
                                 ## Loterias Suportadas
                                 
