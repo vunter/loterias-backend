@@ -1,79 +1,58 @@
-# Loterias Analyzer
+# Loterias Analyzer - Backend
 
-Sistema para análise estatística de resultados de loterias brasileiras. Busca automaticamente os resultados do site oficial da Caixa Econômica Federal e fornece análises estatísticas completas.
+API REST para análise estatística de resultados de loterias brasileiras. Busca automaticamente os resultados do site oficial da Caixa Economica Federal e fornece analises estatisticas, geracao de jogos e simulacao de apostas.
 
 ## Tecnologias
 
-### Backend
 - Java 25
-- Spring Boot 4.0.1 WebFlux
+- Spring Boot 4.0.2
 - Spring Data JPA
 - PostgreSQL
+- Flyway (migrações de banco)
+- Caffeine (cache)
 - RestClient (integração com API da Caixa)
-
-### Frontend
-- Next.js 16 (React 19)
-- TypeScript
-- TailwindCSS
-- Recharts
-- Lucide Icons
+- Prometheus / Loki (observabilidade)
+- OpenAPI / Swagger (documentação)
 
 ## Loterias Suportadas
 
 - Mega-Sena
-- Lotofácil
+- Lotofacil
 - Quina
 - Lotomania
 - Timemania
 - Dupla Sena
 - Dia de Sorte
 - Super Sete
-- +Milionária
+- +Milionaria
 
-## Executando o Projeto
-
-### Pré-requisitos
+## Pre-requisitos
 
 - Java 25 ou superior
-- Maven 3.9+ (ou use o wrapper incluído)
+- Maven 3.9+ (ou use o wrapper incluido)
+- PostgreSQL 15+
 
-### Backend (Desenvolvimento)
+## Executando
 
-```bash
-./mvnw spring-boot:run
-```
-
-API disponível em: http://localhost:8080
-Swagger UI: http://localhost:8080/swagger-ui.html
-
-### Frontend (Desenvolvimento)
+### Desenvolvimento
 
 ```bash
-cd frontend
-npm install
-npm run dev
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
-Frontend disponível em: http://localhost:3000
+API disponivel em: http://localhost:8081
+Swagger UI: http://localhost:8081/docs
 
-### Docker (Recomendado)
+### Docker
 
 ```bash
-# Subir toda a stack (app + PostgreSQL)
-docker-compose up -d
-
-# Ver logs
-docker-compose logs -f app
-
-# Parar
-docker-compose down
+docker build -t loterias-backend .
+docker run -p 8081:8081 loterias-backend
 ```
 
-Acesse: http://localhost:8080
+### Producao
 
-### Produção (Manual)
-
-Configure as variáveis de ambiente:
+Configure as variaveis de ambiente:
 
 ```bash
 export DATABASE_URL=jdbc:postgresql://localhost:5432/loterias
@@ -81,188 +60,163 @@ export DATABASE_USERNAME=seu_usuario
 export DATABASE_PASSWORD=sua_senha
 ```
 
-Execute com o profile de produção:
-
 ```bash
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=prod
 ```
-
-## Monitoramento
-
-| Endpoint | Descrição |
-|----------|-----------|
-| `/actuator/health` | Health check |
-| `/actuator/info` | Informações da aplicação |
-| `/actuator/metrics` | Métricas |
-| `/docs` | Swagger UI |
-| `/api-docs` | OpenAPI JSON |
 
 ## API REST
 
 ### Concursos
 
-| Método | Endpoint | Descrição |
+| Metodo | Endpoint | Descricao |
 |--------|----------|-----------|
 | GET | `/api/concursos/{tipo}` | Lista todos os concursos de uma loteria |
-| GET | `/api/concursos/{tipo}/{numero}` | Busca concurso específico |
-| GET | `/api/concursos/{tipo}/ultimo` | Busca último concurso |
-| POST | `/api/concursos/{tipo}/sync` | Sincroniza novos concursos de uma loteria |
-| POST | `/api/concursos/{tipo}/sync-full` | Carga completa - baixa TODOS os concursos históricos |
+| GET | `/api/concursos/{tipo}/{numero}` | Busca concurso especifico |
+| GET | `/api/concursos/{tipo}/ultimo` | Busca ultimo concurso |
+| POST | `/api/concursos/{tipo}/sync` | Sincroniza novos concursos |
+| POST | `/api/concursos/{tipo}/sync-full` | Carga completa de todos os concursos historicos |
 | POST | `/api/concursos/sync-all` | Sincroniza todas as loterias |
 
-### Estatísticas
+### Dashboard
 
-| Método | Endpoint | Descrição |
+| Metodo | Endpoint | Descricao |
 |--------|----------|-----------|
-| GET | `/api/estatisticas/{tipo}/frequencia` | Frequência de todos os números |
-| GET | `/api/estatisticas/{tipo}/mais-frequentes?quantidade=10` | Números mais sorteados |
-| GET | `/api/estatisticas/{tipo}/menos-frequentes?quantidade=10` | Números menos sorteados |
-| GET | `/api/estatisticas/{tipo}/mais-frequentes-com-ganhadores?quantidade=10` | Mais frequentes em concursos COM ganhadores |
-| GET | `/api/estatisticas/{tipo}/atrasados?quantidade=10` | Números mais atrasados |
-| GET | `/api/estatisticas/{tipo}/pares-impares` | Média de pares/ímpares por concurso |
-| GET | `/api/estatisticas/{tipo}/soma-media` | Soma média das dezenas |
-| GET | `/api/estatisticas/{tipo}/sequenciais` | Frequência de números consecutivos |
-| GET | `/api/estatisticas/{tipo}/faixas` | Distribuição por faixas (01-10, 11-20...) |
-| GET | `/api/estatisticas/{tipo}/numero/{numero}` | Histórico de um número específico |
-| GET | `/api/estatisticas/{tipo}/correlacao?quantidade=20` | Pares de números que mais saem juntos |
-| GET | `/api/estatisticas/{tipo}/acompanham/{numero}?quantidade=10` | Números que mais saem junto com um número específico |
-| POST | `/api/estatisticas/{tipo}/gerar-jogos` | Gera jogos inteligentes baseados em estatísticas |
+| GET | `/api/dashboard/{tipo}` | Dashboard com estatisticas agregadas |
+| GET | `/api/dashboard/{tipo}/numeros/ranking` | Ranking de numeros |
+| GET | `/api/dashboard/{tipo}/conferir` | Conferir aposta |
+| GET | `/api/dashboard/{tipo}/acumulado` | Informacoes de acumulado |
+| GET | `/api/dashboard/{tipo}/especiais` | Concursos especiais |
+| GET | `/api/dashboard/{tipo}/ganhadores` | Ganhadores por UF |
+| GET | `/api/dashboard/{tipo}/rateio` | Rateio de premiacoes |
 
-### Apostas
+### Estatisticas
 
-| Método | Endpoint | Descrição |
+| Metodo | Endpoint | Descricao |
 |--------|----------|-----------|
-| POST | `/api/apostas/{tipo}/verificar` | Verifica se uma aposta ganhou em concursos anteriores |
-| POST | `/api/apostas/{tipo}/simular` | Simula apostas em histórico e calcula ROI |
+| GET | `/api/estatisticas/{tipo}/frequencia` | Frequencia de todos os numeros |
+| GET | `/api/estatisticas/{tipo}/mais-frequentes` | Numeros mais sorteados |
+| GET | `/api/estatisticas/{tipo}/menos-frequentes` | Numeros menos sorteados |
+| GET | `/api/estatisticas/{tipo}/mais-frequentes-com-ganhadores` | Mais frequentes em concursos com ganhadores |
+| GET | `/api/estatisticas/{tipo}/atrasados` | Numeros mais atrasados |
+| GET | `/api/estatisticas/{tipo}/pares-impares` | Media de pares/impares |
+| GET | `/api/estatisticas/{tipo}/soma-media` | Soma media das dezenas |
+| GET | `/api/estatisticas/{tipo}/sequenciais` | Frequencia de numeros consecutivos |
+| GET | `/api/estatisticas/{tipo}/faixas` | Distribuicao por faixas |
+| GET | `/api/estatisticas/{tipo}/numero/{numero}` | Historico de um numero |
+| GET | `/api/estatisticas/{tipo}/correlacao` | Pares de numeros que mais saem juntos |
+| GET | `/api/estatisticas/{tipo}/acompanham/{numero}` | Numeros que mais saem com outro |
+| GET | `/api/estatisticas/{tipo}/gerar-jogos` | Gera jogos baseados em estatisticas |
+| GET | `/api/estatisticas/{tipo}/gerar-jogos-estrategico` | Geracao estrategica de jogos |
 
-### Export
+### Analise Avancada
 
-| Método | Endpoint | Descrição |
+| Metodo | Endpoint | Descricao |
 |--------|----------|-----------|
-| GET | `/api/export/{tipo}/concursos.csv` | Exporta todos os concursos em CSV |
-| GET | `/api/export/{tipo}/frequencia.csv` | Exporta frequência de números em CSV |
-| GET | `/api/export/{tipo}/estatisticas.csv` | Exporta estatísticas completas em CSV |
+| GET | `/api/avancada/{tipo}/ordem-sorteio` | Analise por ordem de sorteio |
+| GET | `/api/avancada/{tipo}/financeiro` | Analise financeira |
+| GET | `/api/avancada/{tipo}/tendencias` | Tendencias e previsoes |
+| GET | `/api/avancada/{tipo}/historico-mensal` | Historico mensal |
+| GET | `/api/avancada/{tipo}/dupla-sena` | Analise especifica Dupla Sena |
 
-### Import (Excel da Caixa)
+### Apostas e Simulacao
 
-| Método | Endpoint | Descrição |
+| Metodo | Endpoint | Descricao |
 |--------|----------|-----------|
-| POST | `/api/import/{tipo}/excel` | Importa arquivo Excel enviado via upload |
-| POST | `/api/import/{tipo}/download-excel` | Baixa Excel direto da Caixa e importa |
-| POST | `/api/import/download-excel-all` | Baixa e importa todas as loterias |
+| POST | `/api/apostas/{tipo}/verificar` | Verifica aposta em concursos anteriores |
+| POST | `/api/simulador/{tipo}/simular` | Simula apostas e calcula ROI |
 
-### Tipos de Loteria Válidos
+### Time do Coracao e Mes da Sorte
+
+| Metodo | Endpoint | Descricao |
+|--------|----------|-----------|
+| GET | `/api/analise/timemania/times` | Lista times da Timemania |
+| GET | `/api/analise/{tipo}/time-coracao` | Ranking de times |
+| GET | `/api/analise/{tipo}/time-coracao/sugestao` | Sugestao de time |
+
+### Import e Export
+
+| Metodo | Endpoint | Descricao |
+|--------|----------|-----------|
+| POST | `/api/import/{tipo}/excel` | Importa Excel via upload |
+| POST | `/api/import/{tipo}/download-excel` | Baixa Excel da Caixa e importa |
+| POST | `/api/import/download-excel-all` | Importa todas as loterias |
+| GET | `/api/export/{tipo}/concursos.csv` | Exporta concursos em CSV |
+| GET | `/api/export/{tipo}/frequencia.csv` | Exporta frequencia em CSV |
+| GET | `/api/export/{tipo}/estatisticas.csv` | Exporta estatisticas em CSV |
+
+### Admin
+
+| Metodo | Endpoint | Descricao |
+|--------|----------|-----------|
+| DELETE | `/api/admin/caches` | Limpa caches da aplicacao |
+
+### Tipos de Loteria Validos
 
 Use um dos seguintes valores para `{tipo}`:
-- `MEGA_SENA` ou `mega-sena`
-- `LOTOFACIL` ou `lotofacil`
-- `QUINA` ou `quina`
-- `LOTOMANIA` ou `lotomania`
-- `TIMEMANIA` ou `timemania`
-- `DUPLA_SENA` ou `dupla-sena`
-- `DIA_DE_SORTE` ou `dia-de-sorte`
-- `SUPER_SETE` ou `super-sete`
-- `MAIS_MILIONARIA` ou `mais-milionaria`
+- `mega-sena`
+- `lotofacil`
+- `quina`
+- `lotomania`
+- `timemania`
+- `dupla-sena`
+- `dia-de-sorte`
+- `super-sete`
+- `mais-milionaria`
 
-### Exemplos de Uso
+### Exemplos
 
 ```bash
-# Carga completa - baixar TODOS os concursos históricos da Mega-Sena (demora ~30min)
-curl -X POST http://localhost:8080/api/concursos/mega-sena/sync-full
+# Carga completa da Mega-Sena
+curl -X POST http://localhost:8081/api/concursos/mega-sena/sync-full
 
-# Sincronizar apenas novos concursos da Mega-Sena (rápido)
-curl -X POST http://localhost:8080/api/concursos/mega-sena/sync
+# Sincronizar novos concursos
+curl -X POST http://localhost:8081/api/concursos/mega-sena/sync
 
-# Ver os 10 números mais frequentes da Mega-Sena
-curl http://localhost:8080/api/estatisticas/mega-sena/mais-frequentes
+# Dashboard
+curl http://localhost:8081/api/dashboard/mega-sena
 
-# Ver números que mais saíram em concursos com ganhadores
-curl http://localhost:8080/api/estatisticas/mega-sena/mais-frequentes-com-ganhadores
+# 10 numeros mais frequentes
+curl http://localhost:8081/api/estatisticas/mega-sena/mais-frequentes
 
-# Ver números mais atrasados
-curl http://localhost:8080/api/estatisticas/lotofacil/atrasados?quantidade=15
+# Numeros mais atrasados
+curl http://localhost:8081/api/estatisticas/lotofacil/atrasados?quantidade=15
 
-# Histórico do número 10 na Lotofácil
-curl http://localhost:8080/api/estatisticas/lotofacil/numero/10
+# Pares que mais saem juntos
+curl http://localhost:8081/api/estatisticas/mega-sena/correlacao?quantidade=10
 
-# Pares de números que mais saem juntos
-curl http://localhost:8080/api/estatisticas/mega-sena/correlacao?quantidade=10
+# Gerar jogos estrategicos
+curl "http://localhost:8081/api/estatisticas/mega-sena/gerar-jogos-estrategico?estrategia=NUMEROS_QUENTES&quantidade=3"
 
-# Números que mais acompanham o número 10
-curl http://localhost:8080/api/estatisticas/mega-sena/acompanham/10
-
-# Gerar 3 jogos inteligentes com números quentes e balanceamento par/ímpar
-curl -X POST http://localhost:8080/api/estatisticas/mega-sena/gerar-jogos \
-  -H "Content-Type: application/json" \
-  -d '{"quantidadeJogos":3,"usarNumerosQuentes":true,"balancearParesImpares":true}'
-
-# Verificar se uma aposta teria ganho nos últimos 100 concursos
-curl -X POST http://localhost:8080/api/apostas/mega-sena/verificar \
+# Verificar aposta
+curl -X POST http://localhost:8081/api/apostas/mega-sena/verificar \
   -H "Content-Type: application/json" \
   -d '{"numeros":[4,8,15,16,23,42]}'
 
-# Simular apostas e calcular ROI
-curl -X POST http://localhost:8080/api/apostas/mega-sena/simular \
-  -H "Content-Type: application/json" \
-  -d '{"jogos":[[4,8,15,16,23,42],[1,2,3,4,5,6]],"valorAposta":5.00}'
-
-# Exportar concursos em CSV
-curl -O http://localhost:8080/api/export/mega-sena/concursos.csv
-
-# Importar Excel local
-curl -X POST http://localhost:8080/api/import/mega-sena/excel \
-  -F "file=@mega-sena.xlsx"
-
-# Baixar Excel da Caixa e importar automaticamente
-curl -X POST http://localhost:8080/api/import/mega-sena/download-excel
-
-# Baixar e importar todas as loterias de uma vez
-curl -X POST http://localhost:8080/api/import/download-excel-all
+# Exportar CSV
+curl -O http://localhost:8081/api/export/mega-sena/concursos.csv
 ```
 
-## Sincronização Automática
+## Sincronizacao Automatica
 
-O sistema sincroniza automaticamente novos concursos diariamente às 22:00 (configurável).
-
-### Configuração
-
-Em `application.yml`:
+O sistema sincroniza novos concursos diariamente as 22:00 (configuravel).
 
 ```yaml
+# application.yml
 loterias:
   sync:
-    enabled: true  # Habilita/desabilita sincronização automática
-    cron: "0 0 22 * * *"  # Horário da sincronização (22:00 todos os dias)
+    enabled: true
+    cron: "0 0 22 * * *"
 ```
 
-Para testes, você pode alterar para execução a cada hora:
-```yaml
-cron: "0 0 * * * *"
-```
+## Monitoramento
 
-## Carga Inicial
-
-Ao iniciar o sistema pela primeira vez, use o endpoint de sincronização para carregar todos os concursos históricos:
-
-```bash
-# Carregar TODOS os concursos históricos de uma loteria (recomendado)
-# A Mega-Sena tem ~2970 concursos, demora aproximadamente 30 minutos
-curl -X POST http://localhost:8080/api/concursos/mega-sena/sync-full
-
-# Carregar todas as loterias (apenas novos concursos - use após a carga inicial)
-curl -X POST http://localhost:8080/api/concursos/sync-all
-```
-
-**Loterias suportadas para sync-full:**
-- `mega-sena` (~2970 concursos)
-- `lotofacil` (~3600 concursos)  
-- `quina` (~6940 concursos)
-- `lotomania` (~2880 concursos)
-- `timemania` (~2350 concursos)
-- `dupla-sena` (~2920 concursos)
-- `dia-de-sorte` (~1170 concursos)
-- `super-sete` (~800 concursos)
-- `mais-milionaria` (~325 concursos)
+| Endpoint | Descricao |
+|----------|-----------|
+| `/actuator/health` | Health check |
+| `/actuator/info` | Informacoes da aplicacao |
+| `/actuator/metrics` | Metricas Prometheus |
+| `/docs` | Swagger UI |
+| `/api-docs` | OpenAPI JSON |
 
 ## Build
 
@@ -270,39 +224,74 @@ curl -X POST http://localhost:8080/api/concursos/sync-all
 ./mvnw clean package
 ```
 
-O JAR executável será gerado em `target/loterias-analyzer-0.0.1-SNAPSHOT.jar`.
+O JAR executavel sera gerado em `target/loterias-analyzer-0.0.1-SNAPSHOT.jar`.
 
 ## Estrutura do Projeto
 
 ```
 src/main/java/br/com/loterias/
-├── LoteriasApplication.java          # Classe principal
+├── LoteriasApplication.java
+├── config/
+│   ├── AccessLogConfig.java
+│   ├── CacheConfig.java
+│   ├── CorsConfig.java
+│   ├── DatabaseInitializer.java
+│   ├── LocalNetworkRestrictionConfig.java
+│   ├── LoteriaProperties.java
+│   ├── OpenApiConfig.java
+│   ├── RateLimitConfig.java
+│   └── RestClientConfig.java
 ├── controller/
-│   ├── ConcursoController.java       # Endpoints de concursos
-│   ├── EstatisticaController.java    # Endpoints de estatísticas
-│   └── GlobalExceptionHandler.java   # Tratamento de erros
+│   ├── AdminController.java
+│   ├── AnaliseAvancadaController.java
+│   ├── ApostasController.java
+│   ├── ConcursoController.java
+│   ├── DashboardController.java
+│   ├── EstatisticaController.java
+│   ├── ExportController.java
+│   ├── GlobalExceptionHandler.java
+│   ├── HomeController.java
+│   ├── ImportController.java
+│   ├── SimuladorController.java
+│   ├── TimeCoracaoController.java
+│   └── TipoLoteriaParser.java
 ├── domain/
-│   ├── dto/                          # Data Transfer Objects
-│   ├── entity/                       # Entidades JPA
-│   └── repository/                   # Repositórios Spring Data
+│   ├── dto/
+│   ├── entity/
+│   └── repository/
 ├── service/
-│   ├── CaixaApiClient.java           # Cliente REST para API da Caixa
-│   ├── ConcursoMapper.java           # Mapeamento de DTOs para entidades
-│   ├── ConcursoSyncService.java      # Serviço de sincronização
-│   ├── EstatisticaService.java       # Serviço de estatísticas
-│   ├── GeradorJogosService.java      # Gerador de jogos inteligentes
-│   ├── VerificadorApostasService.java # Verificador de apostas
-│   ├── SimuladorApostasService.java  # Simulador de ROI
-│   └── ExportService.java            # Exportação CSV
+│   ├── AnaliseNumeroService.java
+│   ├── ApiSyncService.java
+│   ├── AtualizarGanhadoresService.java
+│   ├── CaixaApiClient.java
+│   ├── ConcursoBatchService.java
+│   ├── ConcursoMapper.java
+│   ├── ConcursosEspeciaisService.java
+│   ├── ConcursoSyncService.java
+│   ├── ConferirApostaService.java
+│   ├── DashboardService.java
+│   ├── DuplaSenaService.java
+│   ├── EstatisticaService.java
+│   ├── ExcelImportService.java
+│   ├── ExportService.java
+│   ├── FinanceiroService.java
+│   ├── GeradorEstrategicoService.java
+│   ├── GeradorJogosService.java
+│   ├── OrdemSorteioService.java
+│   ├── SimuladorApostasService.java
+│   ├── SyncRateLimitService.java
+│   ├── TendenciaAnaliseService.java
+│   ├── TimeCoracaoMesSorteService.java
+│   └── VerificadorApostasService.java
 └── scheduler/
-    └── SyncScheduler.java            # Agendamento de sincronização
+    └── SyncScheduler.java
 ```
 
 ## Fonte de Dados
 
-Os dados são obtidos da API oficial da Caixa Econômica Federal:
+Os dados sao obtidos da API oficial da Caixa Economica Federal:
 - Base URL: `https://servicebus2.caixa.gov.br/portaldeloterias/api/`
 
-## Licença
+## Licenca
 
-Este projeto é para fins educacionais. Os dados das loterias pertencem à Caixa Econômica Federal.
+Este projeto e para fins educacionais. Os dados das loterias pertencem a Caixa Economica Federal.
