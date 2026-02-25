@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
 @Entity
 @Table(name = "faixa_premiacao")
@@ -86,5 +87,19 @@ public class FaixaPremiacao {
 
     public void setValorPremio(BigDecimal valorPremio) {
         this.valorPremio = valorPremio;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FaixaPremiacao that = (FaixaPremiacao) o;
+        return Objects.equals(faixa, that.faixa)
+                && Objects.equals(concurso, that.concurso);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(faixa);
     }
 }

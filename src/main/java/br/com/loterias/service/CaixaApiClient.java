@@ -6,11 +6,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
-import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -27,14 +25,9 @@ public class CaixaApiClient {
 
     public CaixaApiClient(
             RestClient.Builder restClientBuilder,
-            @Value("${loterias.caixa.api.base-url:https://servicebus2.caixa.gov.br/portaldeloterias/api/}") String baseUrl,
-            @Value("${caixa.api.timeout:30}") int timeoutSeconds) {
+            @Value("${loterias.caixa.api.base-url:https://servicebus2.caixa.gov.br/portaldeloterias/api/}") String baseUrl) {
         this.restClient = restClientBuilder
                 .baseUrl(baseUrl)
-                .requestFactory(new SimpleClientHttpRequestFactory() {{
-                    setConnectTimeout(Duration.ofSeconds(timeoutSeconds));
-                    setReadTimeout(Duration.ofSeconds(timeoutSeconds));
-                }})
                 .build();
     }
 

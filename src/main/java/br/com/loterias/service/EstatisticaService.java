@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,6 +20,7 @@ import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
+@Transactional(readOnly = true)
 @Service
 public class EstatisticaService {
 
@@ -220,21 +222,23 @@ public class EstatisticaService {
 
         Map<String, Long> distribuicao = new LinkedHashMap<>();
 
-        int maxNumero = tipo.getNumerosDezenas();
-        int numFaixas = (int) Math.ceil(maxNumero / 10.0);
+        int minNumero = tipo.getNumeroInicial();
+        int maxNumero = tipo.getNumeroFinal();
+        int range = maxNumero - minNumero + 1;
+        int numFaixas = (int) Math.ceil(range / 10.0);
 
         for (int i = 0; i < numFaixas; i++) {
-            int inicio = i * 10 + 1;
-            int fim = Math.min((i + 1) * 10, maxNumero);
+            int inicio = minNumero + i * 10;
+            int fim = Math.min(minNumero + (i + 1) * 10 - 1, maxNumero);
             String faixa = String.format("%02d-%02d", inicio, fim);
             distribuicao.put(faixa, 0L);
         }
 
         for (Concurso concurso : concursos) {
             for (Integer dezena : concurso.getDezenasSorteadas()) {
-                int faixaIndex = (dezena - 1) / 10;
-                int inicio = faixaIndex * 10 + 1;
-                int fim = Math.min((faixaIndex + 1) * 10, maxNumero);
+                int faixaIndex = (dezena - minNumero) / 10;
+                int inicio = minNumero + faixaIndex * 10;
+                int fim = Math.min(minNumero + (faixaIndex + 1) * 10 - 1, maxNumero);
                 String faixa = String.format("%02d-%02d", inicio, fim);
                 distribuicao.merge(faixa, 1L, Long::sum);
             }

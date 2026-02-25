@@ -62,10 +62,11 @@ public class GlobalExceptionHandler {
         HttpStatus status = HttpStatus.valueOf(ex.getStatusCode().value());
         if (status.is4xxClientError()) {
             log.warn("Erro cliente {}: {}", status.value(), ex.getReason());
+            return buildErrorResponse(status, ex.getReason());
         } else {
             log.error("Erro servidor {}: {}", status.value(), ex.getReason(), ex);
+            return buildErrorResponse(status, "Erro interno do servidor");
         }
-        return buildErrorResponse(status, ex.getReason());
     }
 
     @ExceptionHandler(Exception.class)

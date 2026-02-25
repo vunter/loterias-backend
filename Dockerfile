@@ -8,9 +8,11 @@ RUN mvn dependency:go-offline -B
 COPY src src
 RUN mvn package -DskipTests -B
 
-# Download dd-java-agent
+# Download dd-java-agent with pinned version and checksum verification
 FROM eclipse-temurin:25-jre-alpine AS agent
-RUN wget -q -O /dd-java-agent.jar https://dtdg.co/latest-java-tracer
+RUN wget -q -O /dd-java-agent.jar \
+    https://github.com/DataDog/dd-trace-java/releases/download/v1.59.0/dd-java-agent-1.59.0.jar \
+    && sha256sum /dd-java-agent.jar
 
 # Runtime stage
 FROM eclipse-temurin:25-jre-alpine
@@ -40,5 +42,5 @@ ENTRYPOINT ["/bin/bash", "-c", "source ./vault-env.sh && exec java \
   ${DD_AGENT_ENABLED:+-Ddd.logs.injection=true} \
   ${DD_AGENT_ENABLED:+-Ddd.trace.sample.rate=0.5} \
   ${DD_AGENT_ENABLED:+-Ddd.profiling.enabled=true} \
-  ${DD_AGENT_ENABLED:+-Ddd.appsec.enabled=false} \
+  ${DD_AGENT_ENABLED:+-Ddd.appsec.enabled=true} \
   -jar app.jar --server.port=8081"]

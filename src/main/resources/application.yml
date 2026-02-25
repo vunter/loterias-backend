@@ -101,8 +101,8 @@ spring:
 
   datasource:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/loterias}
-    username: ${DATABASE_USERNAME:postgres}
-    password: ${DATABASE_PASSWORD:}
+    username: ${DATABASE_USERNAME:loterias_app}
+    password: ${DATABASE_PASSWORD:?DATABASE_PASSWORD must be set}
     driver-class-name: org.postgresql.Driver
 
   jpa:

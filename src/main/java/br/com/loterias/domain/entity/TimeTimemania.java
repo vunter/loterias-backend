@@ -91,12 +91,12 @@ public class TimeTimemania {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         TimeTimemania that = (TimeTimemania) o;
-        return Objects.equals(id, that.id);
+        return Objects.equals(codigoCaixa, that.codigoCaixa);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id);
+        return Objects.hashCode(codigoCaixa);
     }
 
     @Override

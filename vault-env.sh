@@ -36,5 +36,10 @@ export DATABASE_PASSWORD=$(echo "$SECRETS" | jq -r '."database.password"')
 export DATADOG_API_KEY=$(echo "$SECRETS" | jq -r '."datadog.api-key"')
 export DATADOG_SITE=$(echo "$SECRETS" | jq -r '."datadog.site"')
 export LOKI_URL=$(echo "$SECRETS" | jq -r '."loki.url" // empty')
+export ADMIN_API_KEY=$(echo "$SECRETS" | jq -r '."admin.api-key" // empty')
+
+# Clear sensitive variables from environment
+unset VAULT_TOKEN
+unset SECRETS
 
 echo "Vault secrets loaded successfully"

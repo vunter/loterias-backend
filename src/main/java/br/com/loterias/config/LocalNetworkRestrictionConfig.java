@@ -27,16 +27,16 @@ public class LocalNetworkRestrictionConfig {
 
     private static final Logger log = LoggerFactory.getLogger(LocalNetworkRestrictionConfig.class);
 
-    private static final Set<String> RESTRICTED_PATHS = Set.of(
-            "/api/import/fix-wrong-data",
-            "/api/import/fix-missing-data",
-            "/api/import/fix-winners-data",
-            "/api/import/download-excel",
-            "/api/import/atualizar-todos"
+    private static final Set<String> RESTRICTED_PATH_PREFIXES = Set.of(
+            "/api/import/",
+            "/api/admin/"
     );
 
     @Value("${loterias.security.allowed-networks:127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,::1}")
     private List<String> allowedNetworks;
+
+    @Value("${ADMIN_API_KEY:}")
+    private String adminApiKey;
 
     @Bean
     @Order(1)
@@ -48,18 +48,29 @@ public class LocalNetworkRestrictionConfig {
 
             boolean isRestricted = false;
 
-            if (method == HttpMethod.DELETE && path.startsWith("/api/import/")) {
+            if (method == HttpMethod.DELETE && (path.startsWith("/api/import/") || path.startsWith("/api/admin/"))) {
                 isRestricted = true;
             }
-            if (method == HttpMethod.POST && RESTRICTED_PATHS.contains(path)) {
+            if (method == HttpMethod.POST && RESTRICTED_PATH_PREFIXES.stream().anyMatch(path::startsWith)) {
+                isRestricted = true;
+            }
+            // Sync endpoints are admin-only
+            if (path.contains("/sync")) {
                 isRestricted = true;
             }
 
-            if (isRestricted && !isLocalNetwork(exchange)) {
-                log.warn("Blocked restricted endpoint access from remote IP: {} -> {} {}",
-                        getRemoteAddress(exchange), method, path);
-                exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
-                return exchange.getResponse().setComplete();
+            if (isRestricted) {
+                // Check API key first (allows remote authenticated access)
+                String apiKey = request.getHeaders().getFirst("X-Admin-Api-Key");
+                boolean hasValidApiKey = adminApiKey != null && !adminApiKey.isBlank()
+                        && apiKey != null && adminApiKey.equals(apiKey);
+
+                if (!hasValidApiKey && !isLocalNetwork(exchange)) {
+                    log.warn("Blocked restricted endpoint access from remote IP: {} -> {} {}",
+                            getRemoteAddress(exchange), method, path);
+                    exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
+                    return exchange.getResponse().setComplete();
+                }
             }
 
             return chain.filter(exchange);
@@ -67,6 +78,15 @@ public class LocalNetworkRestrictionConfig {
     }
 
     private boolean isLocalNetwork(ServerWebExchange exchange) {
+        // Check X-Forwarded-For first (when behind reverse proxy)
+        String forwarded = exchange.getRequest().getHeaders().getFirst("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isBlank()) {
+            String clientIp = forwarded.split(",")[0].trim();
+            if (isAllowedAddress(clientIp)) {
+                return true;
+            }
+        }
+
         InetSocketAddress remoteAddr = exchange.getRequest().getRemoteAddress();
         if (remoteAddr == null) return false;
 
@@ -78,12 +98,22 @@ public class LocalNetworkRestrictionConfig {
         }
 
         String hostAddress = addr.getHostAddress();
+        return isAllowedAddress(hostAddress);
+    }
+
+    private boolean isAllowedAddress(String ip) {
+        try {
+            InetAddress addr = InetAddress.getByName(ip);
+            if (addr.isLoopbackAddress() || addr.isLinkLocalAddress() || addr.isSiteLocalAddress()) {
+                return true;
+            }
+        } catch (Exception ignored) {}
+
         for (String network : allowedNetworks) {
-            if (matchesCidr(hostAddress, network)) {
+            if (matchesCidr(ip, network)) {
                 return true;
             }
         }
-
         return false;
     }
 

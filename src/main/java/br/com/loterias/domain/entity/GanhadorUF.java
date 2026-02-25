@@ -3,6 +3,8 @@ package br.com.loterias.domain.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
+import java.util.Objects;
+
 @Entity
 @Table(name = "ganhador_uf")
 public class GanhadorUF {
@@ -93,5 +95,21 @@ public class GanhadorUF {
 
     public void setCanal(String canal) {
         this.canal = canal;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        GanhadorUF that = (GanhadorUF) o;
+        return Objects.equals(uf, that.uf)
+                && Objects.equals(faixa, that.faixa)
+                && Objects.equals(cidade, that.cidade)
+                && Objects.equals(concurso, that.concurso);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(uf, faixa, cidade);
     }
 }
