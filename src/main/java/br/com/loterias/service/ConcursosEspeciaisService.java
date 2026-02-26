@@ -293,7 +293,7 @@ public class ConcursosEspeciaisService {
             }
             case LOTOMANIA, DUPLA_SENA, SUPER_SETE -> {
                 // Sorteiam Seg, Qua, Sex
-                yield data.with(TemporalAdjusters.nextOrSame(DayOfWeek.SATURDAY));
+                yield data.with(TemporalAdjusters.nextOrSame(DayOfWeek.FRIDAY));
             }
             default -> data;
         };

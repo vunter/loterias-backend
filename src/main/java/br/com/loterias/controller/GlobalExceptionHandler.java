@@ -32,7 +32,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(WebExchangeBindException.class)
     public ResponseEntity<Map<String, Object>> handleValidationException(WebExchangeBindException ex) {
         String message = ex.getFieldErrors().stream()
-                .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
+                .map(fe -> fe.getField() + ": " + (fe.getDefaultMessage() != null ? fe.getDefaultMessage() : "valor inválido"))
                 .reduce((a, b) -> a + "; " + b)
                 .orElse("Erro de validação");
         log.warn("Validação falhou: {}", message);

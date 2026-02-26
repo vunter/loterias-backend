@@ -78,27 +78,26 @@ public class LocalNetworkRestrictionConfig {
     }
 
     private boolean isLocalNetwork(ServerWebExchange exchange) {
-        // Check X-Forwarded-For first (when behind reverse proxy)
-        String forwarded = exchange.getRequest().getHeaders().getFirst("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            String clientIp = forwarded.split(",")[0].trim();
-            if (isAllowedAddress(clientIp)) {
-                return true;
-            }
-        }
-
         InetSocketAddress remoteAddr = exchange.getRequest().getRemoteAddress();
         if (remoteAddr == null) return false;
 
         InetAddress addr = remoteAddr.getAddress();
         if (addr == null) return false;
 
-        if (addr.isLoopbackAddress() || addr.isLinkLocalAddress() || addr.isSiteLocalAddress()) {
+        boolean directIsLocal = addr.isLoopbackAddress() || addr.isLinkLocalAddress() || addr.isSiteLocalAddress()
+                || isAllowedAddress(addr.getHostAddress());
+
+        if (directIsLocal) {
+            // Only trust X-Forwarded-For when direct connection is from a local/trusted proxy
+            String forwarded = exchange.getRequest().getHeaders().getFirst("X-Forwarded-For");
+            if (forwarded != null && !forwarded.isBlank()) {
+                String clientIp = forwarded.split(",")[0].trim();
+                return isAllowedAddress(clientIp);
+            }
             return true;
         }
 
-        String hostAddress = addr.getHostAddress();
-        return isAllowedAddress(hostAddress);
+        return false;
     }
 
     private boolean isAllowedAddress(String ip) {

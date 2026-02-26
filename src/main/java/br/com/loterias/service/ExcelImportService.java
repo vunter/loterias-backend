@@ -151,7 +151,11 @@ public class ExcelImportService {
 
         try (Workbook workbook = new XSSFWorkbook(excelInputStream)) {
             Sheet sheet = workbook.getSheetAt(0);
-            Map<String, Integer> colunas = mapearColunas(sheet.getRow(0));
+            Row headerRow = sheet.getRow(0);
+            if (headerRow == null) {
+                throw new IllegalStateException("Excel sem linha de cabeçalho para " + tipo.getNome());
+            }
+            Map<String, Integer> colunas = mapearColunas(headerRow);
             int totalLinhas = sheet.getLastRowNum();
             log.info("[{}]   Total de linhas no Excel: {}", tipo.getNome(), totalLinhas);
 
@@ -255,7 +259,11 @@ public class ExcelImportService {
         
         try (Workbook workbook = new XSSFWorkbook(excelInputStream)) {
             Sheet sheet = workbook.getSheetAt(0);
-            Map<String, Integer> colunas = mapearColunas(sheet.getRow(0));
+            Row headerRow = sheet.getRow(0);
+            if (headerRow == null) {
+                throw new IllegalStateException("Excel sem linha de cabeçalho para " + tipo.getNome());
+            }
+            Map<String, Integer> colunas = mapearColunas(headerRow);
             int totalLinhas = sheet.getLastRowNum();
             log.info("[{}] Total de linhas no Excel: {}", tipo.getNome(), totalLinhas);
             
@@ -465,8 +473,11 @@ public class ExcelImportService {
                 }, executor))
                 .toList();
         
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
-        executor.shutdown();
+        try {
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+        } finally {
+            executor.shutdown();
+        }
         
         long elapsed = System.currentTimeMillis() - startTime;
         int totalImportados = resultados.values().stream().mapToInt(r -> Math.max(0, r.importados())).sum();

@@ -161,7 +161,7 @@ public class DashboardService {
 
     private ResumoGeral calcularResumoGeralRapido(TipoLoteria tipo, long totalConcursos, Concurso ultimo) {
         LocalDate ultimoData = ultimo.getDataApuracao();
-        int diasSemSorteio = ultimoData != null ? (int) ChronoUnit.DAYS.between(ultimoData, LocalDate.now()) : 0;
+        int diasSemSorteio = ultimoData != null ? Math.max(0, (int) ChronoUnit.DAYS.between(ultimoData, LocalDate.now())) : 0;
 
         BigDecimal premioUltimo = BigDecimal.ZERO;
         Optional<FaixaPremiacao> faixa1 = ultimo.getFaixasPremiacao().stream()
@@ -380,7 +380,8 @@ public class DashboardService {
         Map<String, Long> faixas = new LinkedHashMap<>();
 
         Set<Integer> primos = Set.of(2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97);
-        int metade = tipo.getNumerosDezenas() / 2;
+        int inicio = tipo.getNumeroInicial();
+        int metade = inicio + tipo.getNumerosDezenas() / 2;
 
         long totalPares = 0, totalImpares = 0, totalPrimos = 0, totalBaixos = 0, totalAltos = 0;
         long totalFreq = 0;
@@ -396,8 +397,8 @@ public class DashboardService {
             if (num <= metade) totalBaixos += f;
             else totalAltos += f;
 
-            int faixaIdx = (num - 1) / 10;
-            String faixaKey = String.format("%02d-%02d", faixaIdx * 10 + 1, Math.min((faixaIdx + 1) * 10, tipo.getNumerosDezenas()));
+            int faixaIdx = (num - inicio) / 10;
+            String faixaKey = String.format("%02d-%02d", inicio + faixaIdx * 10, Math.min(inicio + (faixaIdx + 1) * 10 - 1, tipo.getNumeroFinal()));
             faixas.merge(faixaKey, f, Long::sum);
         }
 

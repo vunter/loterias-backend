@@ -42,6 +42,9 @@ public class AccessLogConfig {
             return forwarded.split(",")[0].trim();
         }
         InetSocketAddress addr = exchange.getRequest().getRemoteAddress();
-        return addr != null ? addr.getAddress().getHostAddress() : "unknown";
+        if (addr != null && addr.getAddress() != null) {
+            return addr.getAddress().getHostAddress();
+        }
+        return "unknown";
     }
 }

@@ -100,6 +100,6 @@ public class FaixaPremiacao {
 
     @Override
     public int hashCode() {
-        return Objects.hash(faixa);
+        return Objects.hash(faixa, concurso);
     }
 }

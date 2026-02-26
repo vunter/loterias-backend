@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import jakarta.annotation.PreDestroy;
 import br.com.loterias.domain.repository.ConcursoRepository;
 
 import java.time.Duration;
@@ -62,6 +63,11 @@ public class ApiSyncService {
         this.concursoMapper = concursoMapper;
         this.batchService = batchService;
         this.concursoRepository = concursoRepository;
+    }
+
+    @PreDestroy
+    void shutdown() {
+        virtualExecutor.close();
     }
 
     public String iniciarSincronizacaoTodosAsync() {

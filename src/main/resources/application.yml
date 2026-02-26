@@ -74,7 +74,7 @@ management:
   datadog:
     metrics:
       export:
-        enabled: ${DATADOG_ENABLED:true}
+        enabled: ${DATADOG_ENABLED:false}
         api-key: ${DATADOG_API_KEY:}
         uri: https://api.${DATADOG_SITE:datadoghq.com}
         step: 30s

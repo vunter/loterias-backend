@@ -110,6 +110,6 @@ public class GanhadorUF {
 
     @Override
     public int hashCode() {
-        return Objects.hash(uf, faixa, cidade);
+        return Objects.hash(uf, faixa, cidade, concurso);
     }
 }

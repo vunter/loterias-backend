@@ -52,7 +52,7 @@ class CaixaApiClientTest {
         doReturn(responseSpec).when(requestHeadersSpec).retrieve();
         doReturn(responseSpec).when(responseSpec).onStatus(any(), any());
 
-        caixaApiClient = new CaixaApiClient(restClientBuilder, "https://servicebus2.caixa.gov.br/portaldeloterias/api/", 5);
+        caixaApiClient = new CaixaApiClient(restClientBuilder, "https://servicebus2.caixa.gov.br/portaldeloterias/api/");
     }
 
     private CaixaApiResponse buildMockResponse(int numero) {
